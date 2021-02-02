@@ -78,8 +78,16 @@ bool permutation(Node* nodeArr, const int count, char adds[][100], int addsCount
                 if (check(nodeArr, count, adds, addsCount) == 1)
                 {
                     printf("\nSolution found: ");
-                    for (int j = 0; j < count; j++)
-                        printf(" %c = %d", nodeArr[j].c, nodeArr[j].v);
+                    for (int i = 0; i < addsCount; i++) {
+                        for (int j = 0; j < 100; j++) {
+                            for (int k = 0; k < count; k++) {
+                                if (adds[i][j] == nodeArr[k].c) printf("%d", nodeArr[k].v);
+                            }
+                        }
+                        if (i == addsCount - 1) break;
+                        if (i != addsCount - 2) printf(" + ");
+                        else printf(" = ");
+                    }
                     return true;
                 }
             }
@@ -89,6 +97,17 @@ bool permutation(Node* nodeArr, const int count, char adds[][100], int addsCount
 
     for (int i = 0; i < 10; i++)
     {
+        bool nextStep = false;
+        if (i == 0) {
+
+            for (int j = 0; j < addsCount; j++) {
+                if (adds[j][0] == nodeArr[n].c) {
+                    nextStep = true;
+                }
+            }
+        }
+
+        if (nextStep) continue;
 
         // if ith integer not used yet 
         if (use[i] == 0)

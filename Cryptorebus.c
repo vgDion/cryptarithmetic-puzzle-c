@@ -1,8 +1,12 @@
+#include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include <stdio.h>
+#include <time.h>
 #pragma warning (disable: 4996)
 
+
+
+// структура для хранения буквы и соответствующего ей целого числа
 typedef struct node
 {
     char c;
@@ -26,18 +30,15 @@ bool is_letter(char c) {
 
 int use[10] = { 0 };
 
-// structure to store char and its corresponding integer 
-
-
-// function check for correct solution 
-int check(Node* nodeArr, const int count, char adds[][100], int addsCount)
+// проверка для правильного решения
+int check(Node* nodeArr, const int count, char adds[][100], int addsCount, int* addsl)
 {
     int values[8] = { 0 };
     int m = 1;
     int i, j;
 
     for (int k = 0; k < addsCount; k++) {
-        for (i = strlen(adds[k]) - 1; i >= 0; i--)
+        for (i = addsl[k] - 1; i >= 0; i--)
         {
             char ch = adds[k][i];
             for (j = 0; j < count; j++)
@@ -56,26 +57,26 @@ int check(Node* nodeArr, const int count, char adds[][100], int addsCount)
     return 0;
 }
 
-// Recursive function to check solution for all permutations 
-bool permutation(Node* nodeArr, const int count, char adds[][100], int addsCount, int n)
+// Рекурсивная функция для проверки решения для всех перестановок
+bool permutation(Node* nodeArr, const int count, char adds[][100], int addsCount, int n, int* addsl)
 {
-    // Base case 
+
     if (n == count - 1)
     {
 
-        // check for all numbers not used yet 
+        // проверка все не использованных цифр 
         for (int i = 0; i < 10; i++)
         {
 
-            // if not used 
+            // если не используется 
             if (use[i] == 0)
             {
 
-                // assign char at index n integer i 
+                // присвоить букве по индексу n целое число i 
                 nodeArr[n].v = i;
 
-                // if solution found 
-                if (check(nodeArr, count, adds, addsCount) == 1)
+                // если решение найдено 
+                if (check(nodeArr, count, adds, addsCount, addsl) == 1)
                 {
                     printf("\nSolution found: ");
                     for (int i = 0; i < addsCount; i++) {
@@ -109,38 +110,38 @@ bool permutation(Node* nodeArr, const int count, char adds[][100], int addsCount
 
         if (nextStep) continue;
 
-        // if ith integer not used yet 
+        // если i-е целое число еще не используется
         if (use[i] == 0)
         {
 
-            // assign char at index n integer i 
+            // присвоить букве по индексу n целое число i
             nodeArr[n].v = i;
 
-            // mark it as not available for other char 
+            // запрет на использование
             use[i] = 1;
 
-            // call recursive function 
-            if (permutation(nodeArr, count, adds, addsCount, n + 1))
+            // вызвать рекурсивную функцию
+            if (permutation(nodeArr, count, adds, addsCount, n + 1, addsl))
                 return true;
 
-            // backtrack for all other possible solutions 
+            // проверка других решений
             use[i] = 0;
         }
     }
     return false;
 }
 
-bool solveCryptographic(char adds[][100], int addsCount)
+bool solveCryptographic(char adds[][100], int addsCount, int* addsl)
 {
-    // count to store number of unique char 
+    // счетчик для хранения числа уникальных символов 
     int count = 0;
     int lengths[8] = { 0 };
 
     for (int i = 0; i < addsCount; i++) {
-        lengths[i] = strlen(adds[i]);
+        lengths[i] = addsl[i];
     }
 
-    // vector to store frequency of each char 
+    // массив для хранения частоты упоминания каждого символа
     int frequency[26] = { 0 };
 
     for (int i = 0; i < addsCount; i++) {
@@ -149,22 +150,22 @@ bool solveCryptographic(char adds[][100], int addsCount)
         }
     }
 
-    // count number of unique char 
+    // подсчитать количество уникальных символов
     for (int i = 0; i < 26; i++)
         if (frequency[i] > 0)
             count++;
 
-    // solution not possible for count greater than 10 
+    // решение невозможно для количества больше 10
     if (count > 10)
     {
         printf("No solution, too many various letters");
         return 0;
     }
 
-    // array of nodes 
+    // массив узлов
     Node nodeArr[10];
 
-    // store all unique char in nodeArr 
+    // хранить все уникальные символы в nodeArr
     int j = 0;
     for (int i = 0; i < 26; i++)
     {
@@ -174,7 +175,7 @@ bool solveCryptographic(char adds[][100], int addsCount)
             j++;
         }
     }
-    return permutation(nodeArr, count, adds, addsCount, 0);
+    return permutation(nodeArr, count, adds, addsCount, 0, addsl);
 }
 
 int main() {
@@ -182,12 +183,16 @@ int main() {
     char tmp[1000] = { 0 };
     char setOfLetters[26] = { 0 };
 
+
+
     gets(tmp);
     int length = strlen(tmp);
 
+    int starttm = clock();
     int addIndex = 0;
     int charIndex = 0;
-    for (int i = 0; i < length; i++) {
+    int addsl[8] = { 0 };
+    for (int i = 0, j = 0; i < length; i++) {
         if (is_letter(tmp[i])) {
             adds[addIndex][charIndex] = tmp[i];
             charIndex++;
@@ -199,6 +204,13 @@ int main() {
                 addIndex++;
             }
         }
+        if (is_letter(tmp[i]))
+            addsl[j]++;
+        else
+        {
+            j++;
+            i += 2;
+        }
     }
 
     int addsCount = 0;
@@ -206,9 +218,10 @@ int main() {
         if (strlen(adds[i]) > 0) addsCount++;
     }
 
-    if (solveCryptographic(adds, addsCount) == false)
-        printf("No solution");
-
+    if (solveCryptographic(adds, addsCount, addsl) == false)
+        printf("No solution \n");
+    int endtm = clock();
+    printf(" %.3f", ((float)endtm - (float)starttm) / 1000);
 
     //SEND + MORE = MONEY
 }
